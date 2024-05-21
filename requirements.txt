@@ -1,0 +1,4 @@
+beautifulsoup4==4.12.3
+feedparser==6.0.11
+tzlocal==4.2
+win10toast_click==0.1.2
