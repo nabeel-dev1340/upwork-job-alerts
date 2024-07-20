@@ -1,4 +1,13 @@
-beautifulsoup4==4.12.3
+tzdata==2024.1
+setuptools==65.5.0
+pip==22.3
+pyobjc-core==10.3.1
+pyobjc-framework-Cocoa==10.3.1
 feedparser==6.0.11
+beautifulsoup4==4.12.3
 tzlocal==4.2
-win10toast_click==0.1.2
+soupsieve==2.5
+plyer==2.0.0
+sgmllib3k==1.0.0
+macos-notifications==0.2.0
+pytz-deprecation-shim==0.1.0.post0

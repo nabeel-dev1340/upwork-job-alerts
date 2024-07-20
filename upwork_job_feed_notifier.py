@@ -5,11 +5,14 @@ from datetime import datetime, timedelta
 from re import findall
 import time
 import webbrowser
-
+import subprocess
+from functools import partial
+from threading import Thread
+from urllib.parse import urlparse
 import feedparser
 import tzlocal
 from bs4 import BeautifulSoup
-from win10toast_click import ToastNotifier
+from mac_notifications import client
 
 
 def fetch_and_notify_jobs():
@@ -34,9 +37,6 @@ def fetch_and_notify_jobs():
 
     # Set your local timezone
     local_tz = tzlocal.get_localzone()
-
-    # Initialize the Windows toast notifier
-    toaster = ToastNotifier()
 
     # Load processed jobs from the JSON file
     if os.path.exists(processed_jobs_file):
@@ -95,9 +95,9 @@ def fetch_and_notify_jobs():
                 rate = (
                     budget.find_next_sibling(string=True)
                     if budget
-                    else hourly_rate.find_next_sibling(string=True)
+                    else hourly_rate.find_next_sibling(string=True)  # type: ignore
                 )
-                rate = rate.replace(":", "").replace("\n", "").strip()
+                rate = rate.replace(":", "").replace("\n", "").strip()  # type: ignore
                 rate = (
                     f"Budget {rate}"
                     if budget
@@ -110,9 +110,9 @@ def fetch_and_notify_jobs():
             # Get job category
             category = (
                 soup.find("b", string="Category")
-                .find_next_sibling(string=True)
-                .replace(":", "")
-                .strip()
+                .find_next_sibling(string=True)  # type: ignore
+                .replace(":", "")  # type: ignore
+                .strip()  # type: ignore
                 .replace(" ", "_")
                 .replace("-", "_")
                 .replace("/", "_")
@@ -123,9 +123,9 @@ def fetch_and_notify_jobs():
             try:
                 country = (
                     soup.find("b", string="Country")
-                    .find_next_sibling(string=True)
-                    .replace(":", "")
-                    .strip()
+                    .find_next_sibling(string=True)  # type: ignore
+                    .replace(":", "")  # type: ignore
+                    .strip()  # type: ignore
                 )
             except Exception as e:
                 country = "N/A"
@@ -134,9 +134,9 @@ def fetch_and_notify_jobs():
             try:
                 skills = (
                     soup.find("b", string="Skills")
-                    .find_next_sibling(string=True)
-                    .replace(":", "")
-                    .strip()
+                    .find_next_sibling(string=True)  # type: ignore
+                    .replace(":", "")  # type: ignore
+                    .strip()  # type: ignore
                 )
             except Exception as e:
                 skills = "N/A"
@@ -171,15 +171,7 @@ def fetch_and_notify_jobs():
             print("\n\n")
             print(message)
             print("\n\n")
-
-            # Define the on_click callback function
-            def on_click():
-                webbrowser.open(entry.link)
-
-            # Display the message as a Windows notification with a callback
-            toaster.show_toast(
-                "New Job Posted", message, duration=10, callback_on_click=on_click
-            )
+            notify("New Job Posted", message, entry.link)
 
             # Add the job ID to the list of processed jobs
             processed_jobs.append(job_id)
@@ -187,6 +179,22 @@ def fetch_and_notify_jobs():
     # Save the processed jobs to the JSON file
     with open(processed_jobs_file, "w") as f:
         json.dump(processed_jobs, f)
+
+
+def notify(title: str, text: str, link: str):
+    # Use terminal-notifier for notifications
+    applescript = f"""
+    terminal-notifier -title "{title}" -message "{text}" -open "{link}"
+    """
+    # Execute command
+    subprocess.call(applescript, shell=True)
+
+    print("Notification sent. Link will open when notification is clicked.")
+
+
+def open_link(link: str):
+    # Open the link in the default web browser
+    subprocess.call(["open", link])
 
 
 # Run the script every 5 minutes
